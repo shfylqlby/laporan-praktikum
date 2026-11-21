@@ -1,6 +1,8 @@
 # laporan-praktikum
 
-**Laprak Teknik Komputer.** Skill untuk agent coding yang membuat **laporan praktikum `.docx`** praktikum Teknik Komputer (jaringan, elektronika, sistem digital) sesuai format resmi kampus. Kamu beri modul praktikum dan folder screenshot. Agent menyusun `spec.json` dan prosa Indonesia, lalu skrip membangun `.docx` dari template resmi, lengkap dengan heading bernomor, caption `SEQ`, tabel berwarna, dan gambar.
+**Laprak, versi 1.2.2.** Satu skill `laprak` untuk agent coding yang mengisi atau membangun **laporan praktikum** mata kuliah apa pun sesuai template dosen. Skill ini bisa mengisi template yang sedang terbuka di Word, atau membangun `.docx` dari modul dan folder screenshot (agent menyusun `spec.json`, lalu skrip membangun dokumen dari template resmi). Penomoran karya ilmiah, format umum (Times New Roman 12, spasi 0, indent 36 pt), dan humanizer bahasa Indonesia sudah termasuk, jadi cukup panggil satu skill.
+
+Diturunkan dari [RavLyr/laporan-praktikum](https://github.com/RavLyr/laporan-praktikum). Humanizer di `skills/laprak/humanizer-indonesia/` berasal dari [adhiprib/humanizer-indonesia](https://github.com/adhiprib/humanizer-indonesia) (MIT, lihat `LICENSE` di folder itu).
 
 Format skill-nya mengikuti standar [Agent Skills](https://agentskills.io), jadi satu paket yang sama jalan di **Claude Code, Codex, OpenCode, Antigravity**, dan puluhan agent lain.
 
@@ -8,7 +10,7 @@ Format skill-nya mengikuti standar [Agent Skills](https://agentskills.io), jadi 
 |---|---|---|---|
 | Claude Code | sesuai dokumentasi | `~/.claude/skills/` | `/laprak` |
 | Codex (CLI, IDE, app) | sesuai dokumentasi | `~/.agents/skills/` | `$laprak` |
-| OpenCode | sesuai dokumentasi | `~/.config/opencode/skills/` | minta langsung atau `@laprak` |
+| OpenCode | sesuai dokumentasi | `~/.config/opencode/skills/` | `@laprak` atau minta langsung |
 | Antigravity (IDE, CLI) | sesuai dokumentasi | `~/.gemini/config/skills/` | minta langsung |
 | Cursor, Cline, Copilot, Kiro, dll | lewat `npx skills` | otomatis | sesuai agent |
 
@@ -18,7 +20,7 @@ Folder dan cara panggil diambil dari dokumentasi masing-masing agent. Skill ini 
 
 ```bash
 # 1. pasang (pilih agent saat ditanya, tambah -g untuk semua proyek)
-npx skills add RavLyr/laporan-praktikum -g
+npx skills add shfylqlby/laporan-praktikum -g
 
 # 2. pasang dependensi Python
 pip install python-docx pillow
@@ -93,9 +95,9 @@ Semua agent memakai folder `laprak` yang sama. Beda hanya lokasi tujuan.
 ### Cara cepat: `npx skills`
 
 ```bash
-npx skills add RavLyr/laporan-praktikum              # proyek ini saja
-npx skills add RavLyr/laporan-praktikum -g           # semua proyek
-npx skills add RavLyr/laporan-praktikum -a claude-code -a codex -g   # agent tertentu
+npx skills add shfylqlby/laporan-praktikum              # proyek ini saja
+npx skills add shfylqlby/laporan-praktikum -g           # semua proyek
+npx skills add shfylqlby/laporan-praktikum -a claude-code -a codex -g   # agent tertentu
 ```
 
 Perintah ini ([vercel-labs/skills](https://github.com/vercel-labs/skills)) mendeteksi agent yang terpasang dan menaruh skill di folder yang benar. Alat bantu lain: `npx skills list`, `npx skills update`, `npx skills remove laprak`.
@@ -103,7 +105,7 @@ Perintah ini ([vercel-labs/skills](https://github.com/vercel-labs/skills)) mende
 ### Manual
 
 ```bash
-git clone https://github.com/RavLyr/laporan-praktikum.git
+git clone https://github.com/shfylqlby/laporan-praktikum.git
 cp -r laporan-praktikum/skills/laprak <FOLDER-TUJUAN>/
 ```
 
@@ -118,10 +120,50 @@ Catatan per agent:
 
 - **Claude Code.** Skill juga bisa dipanggil lewat `/laprak`. Kalau tidak muncul, jalankan `/reload-skills` atau mulai ulang sesi.
 - **Codex.** Mendeteksi perubahan folder otomatis, mulai ulang bila belum muncul. Ketik `/skills` untuk melihat daftar, lalu `$laprak` untuk memanggil. Folder per proyek dicari dari direktori kerja sampai akar repo.
-- **OpenCode.** Selain `~/.config/opencode/skills/`, OpenCode juga membaca `~/.claude/skills/`, `~/.agents/skills/`, `.claude/skills/`, dan `.agents/skills/`. Jadi pemasangan untuk Claude Code atau Codex otomatis terbaca juga di OpenCode. Jangan menaruh skill yang sama di dua tempat, karena ID yang bentrok ditimpa sumber yang didaftarkan belakangan.
+- **OpenCode.** Langkah lengkap ada di [Pemasangan di OpenCode](#pemasangan-di-opencode). Selain `~/.config/opencode/skills/`, OpenCode juga membaca `~/.claude/skills/`, `~/.agents/skills/`, `.claude/skills/`, dan `.agents/skills/`. Jadi pemasangan untuk Claude Code atau Codex otomatis terbaca juga di OpenCode. Jangan menaruh skill yang sama di dua tempat, karena ID yang bentrok ditimpa sumber yang didaftarkan belakangan.
 - **Antigravity.** Folder global di atas mengikuti `npx skills`. Codelab resmi Google menyebut Antigravity CLI bisa memakai `~/.gemini/antigravity-cli/skills/`. Kalau skill tidak terdeteksi di CLI, salin ke folder itu.
 - **Satu pemasangan untuk beberapa agent.** `~/.agents/skills/` dibaca Codex dan OpenCode (serta banyak agent lain di daftar `npx skills`). Kalau memakai keduanya, cukup satu salinan di sana. Claude Code memakai folder sendiri.
 - **Agent lain.** Pakai `npx skills add`. Daftar agent dan foldernya ada di [docs agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md).
+
+### Pemasangan di OpenCode
+
+1. Pasang Python 3.9+ dan dependensinya:
+   ```bash
+   pip install python-docx pillow
+   ```
+2. Ambil repo ini:
+   ```bash
+   git clone https://github.com/shfylqlby/laporan-praktikum.git
+   ```
+3. Salin folder skill ke folder skill global OpenCode.
+   - macOS / Linux:
+     ```bash
+     mkdir -p ~/.config/opencode/skills
+     cp -r laporan-praktikum/skills/laprak ~/.config/opencode/skills/
+     ```
+   - Windows (PowerShell):
+     ```powershell
+     New-Item -ItemType Directory -Force "$env:USERPROFILE\.config\opencode\skills"
+     Copy-Item -Recurse laporan-praktikum\skills\laprak "$env:USERPROFILE\.config\opencode\skills\"
+     ```
+   Untuk satu proyek saja, salin ke `.opencode/skills/laprak` di akar proyek.
+4. Uji generator:
+   ```bash
+   python ~/.config/opencode/skills/laprak/scripts/selfcheck.py
+   ```
+   Harus mencetak `selfcheck OK`.
+5. Buka atau mulai ulang OpenCode, lalu tanya "skill apa saja yang tersedia?". `laprak` harus ada di daftar.
+6. Panggil dengan menyebut `@laprak` di prompt, misalnya:
+   ```
+   @laprak isi BAB 6 profil srwe. modul: ./modul6.pdf, screenshot: ./shots, data: ./data.md
+   ```
+   OpenCode tidak memakai perintah garis miring untuk skill. Menulis "bikin laprak ..." tanpa `@` juga biasanya memicu skill lewat deskripsinya.
+
+Catatan OpenCode:
+- ID skill diambil dari nama folder, jadi foldernya harus tetap bernama `laprak`.
+- Jangan pasang `laprak` di dua tempat sekaligus (misalnya `~/.config/opencode/skills/` dan `~/.claude/skills/`), karena OpenCode membaca keduanya dan salah satunya menimpa yang lain.
+- Bila `opencode.json` memakai aturan izin `skill`, pastikan `laprak` tidak berstatus `deny`.
+- Memperbarui: `git pull` di folder repo, lalu salin ulang folder `skills/laprak`.
 
 ### Memeriksa pemasangan
 
@@ -230,8 +272,13 @@ README.md
 docs/
 ├── CARA-PAKAI.md             # panduan lengkap: bahan, prompt, cek, penyesuaian
 └── contoh/                   # spec.json + gambar contoh siap build
+.claude-plugin/plugin.json    # manifest plugin Claude Code (versi 1.2.2)
 skills/laprak/
-├── SKILL.md                  # instruksi untuk agent (alur, aturan wajib)
+├── SKILL.md                  # satu-satunya skill: jalur, format umum, aturan isi, humanizer, penomoran
+├── humanizer-indonesia/      # Humanizer Indonesia 1.7.2 (adhiprib, MIT)
+│   ├── PANDUAN.md            # alur kerja humanizer
+│   ├── references/           # katalog pola tulisan AI, preset suara
+│   └── scripts/metrik.py     # pengukur gaya teks Indonesia
 ├── assets/
 │   ├── srwe.docx             # template kosong profil srwe (jaringan)
 │   ├── eldas.docx            # template kosong profil eldas (elektronika, digital)
@@ -243,21 +290,20 @@ skills/laprak/
 │   ├── word_live.ps1         # edit dokumen yang terbuka di Word: .bak, InsertCaption (Windows)
 │   └── selfcheck.py          # uji mandiri semua profil
 └── references/
+    ├── generator.md          # panduan generator Jalur B (dulu SKILL.md generator)
     ├── spec-schema.md        # bentuk spec.json
     ├── struktur-docx.md      # angka format hasil pembedahan template
     └── bahasa-id.md          # kaidah menulis prosa Indonesia
-skills/laprak-word/
-├── SKILL.md                  # isi atau rapikan template yang terbuka di Word / .docx
-└── references/
-    ├── jalur-b.md            # bangun dari spec memakai skill laprak
-    └── nomor-halaman.md      # aturan nomor halaman dokumen lengkap
 ```
 
-### Skill pendamping: `laprak-word`
+### Satu skill, dua jalur
 
-`laprak` membangun laporan baru dari `spec.json`. `laprak-word` dipakai saat template dosen sudah ada: terbuka di Word (misalnya lewat Claude for Word, memakai tool add-in `execute_office_js`) atau dilampirkan sebagai `.docx`. Skill ini mengisi satu BAB langsung di dokumen, menjaga style template, dan mengatur penomoran akademik (caption bab.urutan, hierarki heading, nomor halaman untuk dokumen lengkap). Isinya juga memuat aturan menulis analisis, sitasi APA, dan lint rujukan.
+Sejak 1.2.2 hanya ada satu skill, `laprak`. Skill `laprak-word` dan `penomoran-akademik` yang dulu terpisah sudah digabung ke dalamnya.
 
-Bila tidak ada dokumen terbuka, `laprak-word` beralih ke Jalur B dan memakai generator `laprak`. Jadi pasang keduanya; `npx skills add RavLyr/laporan-praktikum` sudah memasang keduanya sekaligus.
+- **Jalur A, edit langsung.** Template dosen terbuka di Word (lewat add-in seperti Claude for Word, atau lewat COM dengan `scripts/word_live.ps1` di Windows) atau dilampirkan sebagai `.docx`. Skill mengisi satu BAB, menjaga style template, dan memasang caption Word asli.
+- **Jalur B, bangun dari spec.** Tidak ada dokumen; agent menulis `spec.json` dan `scripts/build_laprak.py` membangun `.docx` dari template di `assets/`.
+
+Di kedua jalur, analisis ditulis ringkas (langkah 4b) lalu disunting humanizer (langkah 5b) sebelum masuk dokumen, dan penomoran akademik (Bagian 9) diterapkan otomatis.
 
 Aturan yang dipegang skill, dan sebaiknya tidak dilanggar:
 
