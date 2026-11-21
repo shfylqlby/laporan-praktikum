@@ -127,6 +127,17 @@ Catatan per agent:
 
 ### Pemasangan di OpenCode
 
+**Cara cepat, tanpa clone** (butuh Node.js dan Python):
+
+```bash
+npx skills add https://github.com/shfylqlby/laporan-praktikum/tree/laprak-1.2.2/skills/laprak -g -a opencode -y
+pip install python-docx pillow
+```
+
+Skill terpasang di `~/.config/opencode/skills/laprak`, lengkap dengan `scripts/`, `assets/`, dan humanizer. URL berisi nama branch, jadi yang terpasang adalah versi 1.2.2 walaupun `main` masih versi lama. Untuk memperbarui, jalankan perintah yang sama lagi.
+
+**Cara manual:**
+
 1. Pasang Python 3.9+ dan dependensinya:
    ```bash
    pip install python-docx pillow
