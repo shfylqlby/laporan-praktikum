@@ -72,9 +72,15 @@ def cek(profil, bab, tmp):
     assert any(f"SEQ Tabel_{bab}.{sfx} " in f for f in fields), f"{profil}: SEQ tabel salah"
 
     t0 = d.tables[0]
-    shd = t0.rows[0].cells[0]._tc.tcPr.find(qn("w:shd"))
-    assert shd.get(qn("w:fill")) == P["tabel"]["header_fill"], f"{profil}: warna header tabel salah"
+    # tabel tanpa warna: tidak ada shading di sel mana pun, teks hitam, header hanya tebal
+    for row in t0.rows:
+        for cell in row.cells:
+            assert cell._tc.tcPr.find(qn("w:shd")) is None, f"{profil}: sel tabel tidak boleh berwarna"
+            for r in cell.paragraphs[0].runs:
+                assert r.font.color.rgb == RGBColor(0, 0, 0), f"{profil}: teks tabel harus hitam"
     assert t0.rows[0].cells[0].paragraphs[0].runs[0].bold, f"{profil}: header tabel tidak tebal"
+    assert not t0.rows[1].cells[0].paragraphs[0].runs[0].bold, f"{profil}: isi tabel tidak boleh tebal"
+    assert any("tabel berwarna" in x for x in L.lint_warna(_dok_berwarna(tmp))), f"{profil}: lint tidak menangkap tabel berwarna"
 
     tcode = d.tables[1]
     assert tcode.cell(0, 0).paragraphs[0].runs[0].font.name == P["kode"]["font"], f"{profil}: font kode salah"
@@ -138,6 +144,20 @@ def cek(profil, bab, tmp):
 
     cek_format_umum(d, P, profil, tcode)
     print(f"  {profil} OK")
+
+
+def _dok_berwarna(tmp):
+    """Dokumen kecil berisi tabel ber-header warna, untuk menguji lint warna tabel."""
+    from docx.oxml import OxmlElement
+    d = Document()
+    t = d.add_table(rows=2, cols=2)
+    sh = OxmlElement("w:shd")
+    sh.set(qn("w:val"), "clear")
+    sh.set(qn("w:fill"), "FF89FF")
+    t.cell(0, 0)._tc.get_or_add_tcPr().append(sh)
+    out = os.path.join(tmp, "berwarna.docx")
+    d.save(out)
+    return Document(out)
 
 
 def isi(p):

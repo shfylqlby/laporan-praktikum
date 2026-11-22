@@ -1,6 +1,6 @@
 {
   "name": "laprak",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Mengisi atau membangun laporan praktikum mengikuti template dosen di Word atau sebagai .docx, lengkap dengan penomoran karya ilmiah Indonesia dan humanizer bahasa Indonesia, dalam satu skill /laprak.",
   "author": { "name": "shfylqlby" }
 }

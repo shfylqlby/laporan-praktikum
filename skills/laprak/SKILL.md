@@ -36,7 +36,7 @@ Jalur A dan B memakai aturan yang sama: Prinsip utama, gaya bahasa, analisis, si
 ### Jalur B: bangun dari spec
 Memakai generator yang ada di folder skill ini: `scripts/`, `assets/`, dan `references/`. Semua path di bawah relatif terhadap folder skill ini, bukan folder kerja pengguna. Format dikunci oleh kode dan template `.docx`, sehingga konsisten antar modul. Panduan lengkap generator ada di `references/generator.md`.
 1. Pastikan dependensi ada: `pip install python-docx pillow` (tambah `--break-system-packages` di sandbox Linux bila pip menolak). Uji sekali dengan `python scripts/selfcheck.py`; hasilnya harus `selfcheck OK`.
-   Bila folder `scripts/` tidak ada (skill dipasang hanya dengan SKILL.md, misalnya diunggah ke claude.ai tanpa folder lain), ambil generatornya ke folder kerja sendiri: `git clone --depth 1 https://github.com/shfylqlby/laporan-praktikum`, lalu pakai `skills/laprak/` di dalamnya.
+   Bila folder `scripts/` tidak ada (skill dipasang hanya dengan SKILL.md, misalnya diunggah ke claude.ai tanpa folder lain), ambil generatornya ke folder kerja sendiri: `git clone -b laprak-1.2.2 --depth 1 https://github.com/shfylqlby/laporan-praktikum`, lalu pakai `skills/laprak/` di dalamnya.
 2. Baca `references/spec-schema.md` sebelum menulis spec. `references/bahasa-id.md` boleh dibaca sebagai pelengkap; bila berbeda, Bagian 5 dan 5b skill ini yang dipakai.
 3. Tentukan profil (`eldas` atau `srwe`) dari ciri di `assets/profil.json`. Bila ragu, tanya satu kali. Bila mata kuliah lain dan belum ada profilnya, pakai Jalur A, atau tambahkan profil baru mengikuti `references/generator.md`.
 4. Petakan screenshot ke langkah percobaan (urutan berkas biasanya urutan langkah; konfirmasi bila tidak jelas), tulis `spec.json`, lalu bangun dengan `python scripts/build_laprak.py spec.json -o Laporan-Modul-N.docx`.
@@ -63,7 +63,7 @@ Berlaku untuk semua mata kuliah bila template atau dosen tidak menetapkan lain.
 - **Daftar** (Tujuan, langkah kerja, Kesimpulan): LeftIndent 36 pt, FirstLineIndent −36 pt; nomor mepet kiri, teks mulai di 36 pt.
 - **Caption gambar**: di bawah gambar (Below selected item), TNR 10 hitam, tidak miring, rata tengah, spasi 1,5, before/after 0. Paragraf gambar atau placeholder di atasnya spasi 1, before/after 0.
 - **Caption tabel**: di atas tabel (Above selected item), TNR 10 hitam, tidak miring, spasi 1, before/after 0, li 36 pt fi −36 pt.
-- **Tabel data**: `Table Grid`, TNR 12, header tebal dan rata tengah, isi rata tengah, spasi 1,5, tanpa indent. Isi tabel data (alamat IP, VLAN) tidak diubah saat merapikan tabel lain.
+- **Tabel data**: `Table Grid`, TNR 12, **tanpa warna**: tidak ada shading atau warna latar di header maupun isi, semua teks hitam. Header cukup tebal dan rata tengah; isi tidak tebal, rata tengah, spasi 1,5, tanpa indent. Tabel berwarna (header pink, biru, dan sejenisnya) terbaca sebagai AI slop. Isi tabel data (alamat IP, VLAN) tidak diubah saat merapikan tabel lain.
 - **Kode CLI**: tabel 1x1 `Table Grid`, Courier New 10, spasi 1, before/after 0, tidak miring.
 - **Miring**: kata atau kalimat bahasa Inggris di paragraf isi (*port security*, *native VLAN*, *sticky*, *DHCP snooping*). Tidak miring: nama merek, produk, atau perangkat (Cisco, Packet Tracer, Command Prompt, Rogue Laptop), heading, caption, tabel, dan kode CLI.
 - **Placeholder**: gambar atau data yang belum ada ditandai `[ISI: ...]` dengan teks abu-abu. Struktur dan isi template tidak dihapus tanpa diminta.
@@ -177,7 +177,7 @@ Aturan caption dan nomornya ada di Bagian 9. Di sini yang berlaku untuk isi:
 - Setelah menyisipkan caption, baca ulang teksnya. Bila field gagal dibuat, laporkan dan jangan mengetik nomor diam-diam tanpa memberi tahu pengguna.
 - Setiap gambar dan tabel dirujuk minimal sekali di prosa ("seperti pada Gambar 6.2", "Tabel 6.1 memuat..."), dengan huruf kapital pada Gambar dan Tabel.
 - Persamaan ditulis di baris sendiri, rata tengah, dengan nomor di kanan: (6.1), (6.2). Simbol dijelaskan satu kali setelah persamaan. Rumus dari pengguna dipakai apa adanya.
-- Tabel data: header tebal, isi rata tengah, angka dengan desimal konsisten dan satuan di header. Ikuti gaya tabel yang sudah ada di dokumen (baca `style` dan `headerRowCount` dari tabel sibling).
+- Tabel data: tanpa warna latar, header tebal hitam, isi rata tengah, angka dengan desimal konsisten dan satuan di header. Bila tabel di template dosen sudah berwarna, biarkan tabel itu; tabel baru yang dibuat skill tetap tanpa warna. Ikuti gaya tabel yang sudah ada di dokumen (baca `style` dan `headerRowCount` dari tabel sibling).
 - Kode program atau perintah: dalam tabel satu sel `Table Grid` (bukan shape), Courier New 10 pt, spasi 1, before 0 after 0, warna hitam, tidak miring.
 - Gambar: rata tengah, rasio asli dijaga, lebar tidak melebihi area teks (maksimal sekitar 14 cm untuk profil Eldas). Paragraf gambar tidak dipisah dari caption.
 
@@ -252,8 +252,8 @@ Cara merespons:
 ## Variasi profil
 Eldas dan SRWE hanyalah dua profil yang sudah dikenal, bukan batas cakupan skill. Skill ini berlaku untuk laporan praktikum mata kuliah apa pun. Untuk mata kuliah lain, template dosen menjadi acuan penuh, dan dua profil di bawah hanya contoh cara membaca ciri template.
 
-- **Eldas**: judul tanpa heading bertingkat berlebih, heading sampai empat tingkat (6.3.1.1), caption seluruhnya style `Caption`, header tabel terang dengan teks tebal hitam, tabel hasil boleh muncul di Hasil dan Analisis.
-- **SRWE**: judul "BAB V", Tujuan, Percobaan, Hasil dan Analisis, Kesimpulan, ada tabel kode, header tabel berwarna dengan teks putih bila template menggunakannya.
+- **Eldas**: judul tanpa heading bertingkat berlebih, heading sampai empat tingkat (6.3.1.1), caption seluruhnya style `Caption`, header tabel tebal hitam tanpa warna, tabel hasil boleh muncul di Hasil dan Analisis.
+- **SRWE**: judul "BAB V", Tujuan, Percobaan, Hasil dan Analisis, Kesimpulan, ada tabel kode, header tabel tebal hitam tanpa warna.
 Bila profil tidak jelas, baca template dulu dan tanyakan satu pertanyaan. Bila ternyata profil baru (mata kuliah lain), kerjakan mengikuti template dan di akhir tawarkan menyimpan cirinya sebagai profil baru di sini.
 
 ## Penutup setiap tugas

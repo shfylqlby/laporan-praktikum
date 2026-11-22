@@ -15,8 +15,8 @@
     "tabel": {
       "style": "Table Grid",
       "width": 7938,
-      "header_fill": "FF89FF",
-      "header_color": "FFFFFF",
+      "header_fill": null,
+      "header_color": null,
       "border": false
     },
     "kode": {"font": "Courier New", "size": 10, "indent": 720},
@@ -39,7 +39,7 @@
     "tabel": {
       "style": "Table Grid",
       "width": 7938,
-      "header_fill": "E8EEF5",
+      "header_fill": null,
       "header_color": null,
       "border": true
     },

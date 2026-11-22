@@ -11,8 +11,8 @@ hanya **nomor BAB, judul, dan isi**. Format tidak diubah.
 
 | Profil | Template asal | Ciri |
 |---|---|---|
-| `srwe` | Format Laporan Prak SRWE Modul 4 | judul berawalan "BAB V", caption gambar `captiongambar`, header tabel `FF89FF`, gambar maks 11,67 cm |
-| `eldas` | ELDAS2026_MODUL4_Kel26 | judul tanpa "BAB", seluruh caption style `Caption`, header tabel `E8EEF5`, gambar maks 14 cm, heading sampai empat tingkat |
+| `srwe` | Format Laporan Prak SRWE Modul 4 | judul berawalan "BAB V", caption gambar `captiongambar`, gambar maks 11,67 cm |
+| `eldas` | ELDAS2026_MODUL4_Kel26 | judul tanpa "BAB", seluruh caption style `Caption`, gambar maks 14 cm, heading sampai empat tingkat |
 
 Pilih lewat `"profil"` di spec. Daftar lengkap kunci ada di `assets/profil.json`;
 timpa sebagian lewat `"profil_override"` kalau dosen minta variasi kecil.
@@ -37,7 +37,7 @@ yang dipakai lewat `profil_override`.
 | Caption tabel | di atas tabel, TNR 10 hitam, tidak miring, spasi 1 |
 | Nomor caption | "Gambar 6.1", field `SEQ Gambar_6.` (sama dengan Word InsertCaption berlabel "Gambar 6."), tanpa spasi sebelum nomor |
 | Paragraf gambar | spasi 1, rata tengah |
-| Tabel data | `Table Grid` selebar teks, header tebal, isi rata tengah, spasi 1,5, tanpa indent |
+| Tabel data | `Table Grid` selebar teks, tanpa warna (tanpa shading, teks hitam), header tebal, isi rata tengah, spasi 1,5, tanpa indent |
 | Kode CLI | tabel 1x1 `Table Grid`, Courier New 10, spasi 1, tidak miring |
 | Miring | istilah asing di prosa saja. Heading, caption, tabel, kode, dan nama merek (Cisco, Packet Tracer) tidak miring |
 | Gambar belum ada | kotak abu-abu bergaris putus berisi `[ISI: gambar ...]`, caption tetap ada |
@@ -140,7 +140,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/word_live.ps1 -Aksi 
 ```bash
 python scripts/selfcheck.py
 ```
-Membangun dokumen contoh tiap profil lalu memeriksa style, penomoran, warna header,
+Membangun dokumen contoh tiap profil lalu memeriksa style, penomoran, tabel tanpa warna,
 ukuran gambar, field SEQ, pemisah halaman, kemiringan heading, spasi kode, penanda gambar
 kosong, nomor persamaan, urutan pustaka, dan hasil lint. Format umum diperiksa di setiap
 paragraf: font dan ukuran, before/after 0, indent, format caption, tabel tanpa miring,

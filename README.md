@@ -1,6 +1,6 @@
 # laporan-praktikum
 
-**Laprak, versi 1.2.2.** Satu skill `laprak` untuk agent coding yang mengisi atau membangun **laporan praktikum** mata kuliah apa pun sesuai template dosen. Skill ini bisa mengisi template yang sedang terbuka di Word, atau membangun `.docx` dari modul dan folder screenshot (agent menyusun `spec.json`, lalu skrip membangun dokumen dari template resmi). Penomoran karya ilmiah, format umum (Times New Roman 12, spasi 0, indent 36 pt), dan humanizer bahasa Indonesia sudah termasuk, jadi cukup panggil satu skill.
+**Laprak, versi 1.2.3.** Satu skill `laprak` untuk agent coding yang mengisi atau membangun **laporan praktikum** mata kuliah apa pun sesuai template dosen. Skill ini bisa mengisi template yang sedang terbuka di Word, atau membangun `.docx` dari modul dan folder screenshot (agent menyusun `spec.json`, lalu skrip membangun dokumen dari template resmi). Penomoran karya ilmiah, format umum (Times New Roman 12, spasi 0, indent 36 pt), dan humanizer bahasa Indonesia sudah termasuk, jadi cukup panggil satu skill.
 
 Diturunkan dari [RavLyr/laporan-praktikum](https://github.com/RavLyr/laporan-praktikum). Humanizer di `skills/laprak/humanizer-indonesia/` berasal dari [adhiprib/humanizer-indonesia](https://github.com/adhiprib/humanizer-indonesia) (MIT, lihat `LICENSE` di folder itu).
 
@@ -48,7 +48,7 @@ Buka `.docx` hasilnya di Word dan setujui tawaran memperbarui field (atau tekan 
 
 - Heading bernomor otomatis (BAB V, 5.1, 5.1.1) dari satu nilai `"bab"`.
 - Caption gambar dan tabel memakai field `SEQ` Word, bukan ketikan manual.
-- Tabel data berwarna, tabel kode (Courier New), gambar rata tengah dengan rasio asli dan caption tepat di bawahnya.
+- Tabel data tanpa warna (header tebal hitam, Table Grid), tabel kode (Courier New), gambar rata tengah dengan rasio asli dan caption tepat di bawahnya.
 - Istilah asing dimiringkan otomatis di prosa, tidak di heading, caption, tabel, atau kode.
 - Format umum semua mata kuliah: Times New Roman 12, before/after 0, indent 36 pt, dan setiap sub-bab level 2 di halaman baru.
 - Caption identik dengan hasil Word InsertCaption ("Gambar 6.1", field `SEQ Gambar_6.`).
@@ -134,7 +134,7 @@ npx skills add https://github.com/shfylqlby/laporan-praktikum/tree/laprak-1.2.2/
 pip install python-docx pillow
 ```
 
-Skill terpasang di `~/.config/opencode/skills/laprak`, lengkap dengan `scripts/`, `assets/`, dan humanizer. URL berisi nama branch, jadi yang terpasang adalah versi 1.2.2 walaupun `main` masih versi lama. Untuk memperbarui, jalankan perintah yang sama lagi.
+Skill terpasang di `~/.config/opencode/skills/laprak`, lengkap dengan `scripts/`, `assets/`, dan humanizer. URL berisi nama branch, jadi yang terpasang adalah versi terbaru di branch itu (sekarang 1.2.3) walaupun `main` masih versi lama. Untuk memperbarui, jalankan perintah yang sama lagi.
 
 **Cara manual:**
 
@@ -253,8 +253,8 @@ Skema lengkap: [spec-schema.md](skills/laprak/references/spec-schema.md).
 
 | Profil | Untuk | Ciri |
 |---|---|---|
-| `srwe` | praktikum jaringan komputer (router, switch, wireless) | judul berawalan "BAB V" dua baris, caption gambar `captiongambar`, header tabel `FF89FF`, gambar maks 11,67 cm |
-| `eldas` | praktikum elektronika dasar dan sistem digital (rangkaian, gerbang logika) | judul tanpa "BAB", seluruh caption style `Caption`, header tabel `E8EEF5`, gambar maks 14 cm, heading sampai 4 tingkat |
+| `srwe` | praktikum jaringan komputer (router, switch, wireless) | judul berawalan "BAB V" dua baris, caption gambar `captiongambar`, gambar maks 11,67 cm |
+| `eldas` | praktikum elektronika dasar dan sistem digital (rangkaian, gerbang logika) | judul tanpa "BAB", seluruh caption style `Caption`, gambar maks 14 cm, heading sampai 4 tingkat |
 
 Ragu memilih? Lihat contoh laporan dari asisten atau dosen. Ada kata "BAB" di judul dan tabel pink berarti `srwe`.
 
@@ -262,7 +262,7 @@ Ragu memilih? Lihat contoh laporan dari asisten atau dosen. Ada kata "BAB" di ju
 
 | Kebutuhan | Cara | Rujukan |
 |---|---|---|
-| Dosen minta variasi kecil (font kode, lebar gambar, warna header) | `profil_override` di `spec.json` | [CARA-PAKAI, bagian 6](docs/CARA-PAKAI.md) |
+| Dosen minta variasi kecil (font kode, lebar gambar) | `profil_override` di `spec.json` | [CARA-PAKAI, bagian 6](docs/CARA-PAKAI.md) |
 | Istilah asing salah dimiringkan | `istilah` atau `istilah_kecuali` | [CARA-PAKAI, bagian 6](docs/CARA-PAKAI.md) |
 | Format kampus lain | tambah profil baru | [Menambah profil](#menambah-profil-baru) |
 | Gaya tulisan beda | edit atau tambahkan aturan di prompt | [bahasa-id.md](skills/laprak/references/bahasa-id.md) |
@@ -283,7 +283,7 @@ README.md
 docs/
 ├── CARA-PAKAI.md             # panduan lengkap: bahan, prompt, cek, penyesuaian
 └── contoh/                   # spec.json + gambar contoh siap build
-.claude-plugin/plugin.json    # manifest plugin Claude Code (versi 1.2.2)
+.claude-plugin/plugin.json    # manifest plugin Claude Code (versi 1.2.3)
 skills/laprak/
 ├── SKILL.md                  # satu-satunya skill: jalur, format umum, aturan isi, humanizer, penomoran
 ├── humanizer-indonesia/      # Humanizer Indonesia 1.7.2 (adhiprib, MIT)

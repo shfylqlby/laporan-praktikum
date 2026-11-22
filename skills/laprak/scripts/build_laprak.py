@@ -439,10 +439,11 @@ class Builder:
             if cfg.get("header_fill"):
                 cell._tc.get_or_add_tcPr().append(
                     el("w:shd", val="clear", color="auto", fill=cfg["header_fill"]))
-            self.fill(cell, str(text), bold=True, color=cfg.get("header_color"))
+            # tanpa warna: header cukup tebal hitam di latar putih (warna terbaca AI slop)
+            self.fill(cell, str(text), bold=True, color=cfg.get("header_color") or "000000")
         for i, row in enumerate(rows, start=1):
             for j, text in enumerate(row):
-                self.fill(t.rows[i].cells[j], str(text))
+                self.fill(t.rows[i].cells[j], str(text), color="000000")
         for j, w in enumerate(spec.get("widths") or []):
             for row in t.rows:
                 row.cells[j].width = Cm(w)
@@ -588,7 +589,8 @@ def main():
                     help="berhenti bila gambar tidak ada, alih-alih memasang penanda [ISI: ...]")
     ap.add_argument("--tanpa-lint", action="store_true", help="lewati pemeriksaan setelah build")
     a = ap.parse_args()
-    with open(a.spec, encoding="utf-8") as f:
+    # utf-8-sig: spec yang ditulis PowerShell 5 / Notepad diawali BOM
+    with open(a.spec, encoding="utf-8-sig") as f:
         spec = json.load(f)
     spec.setdefault("base_dir", os.path.dirname(os.path.abspath(a.spec)))
     out = a.output or spec.get("output") or "Laporan.docx"

@@ -11,6 +11,7 @@ import re
 import sys
 
 from docx import Document
+from docx.oxml.ns import qn
 
 PENANDA = re.compile(r"\[(ISI|CEK SUMBER)\s*:[^\]]*\]")
 RUJUKAN = re.compile(r"\b(Gambar|Tabel)\s+(\d+)\.(\d+)\b")
@@ -65,6 +66,22 @@ def lint_isi(doc):
                     temuan.append(f"isi: Kesimpulan memuat penanda, harus menjawab Tujuan saja: {t[:60]}")
                 for m in DATA.finditer(t):
                     temuan.append(f"isi: Kesimpulan memuat data kelompok ({m.group(0)}): {potong(t, m)}")
+    return temuan
+
+
+def lint_warna(doc):
+    """Tabel tanpa warna: header cukup tebal hitam di latar putih. Warna sel terbaca AI slop."""
+    temuan = []
+    for i, t in enumerate(doc.tables, start=1):
+        warna = set()
+        for tc in t._tbl.iter(qn("w:tc")):
+            for shd in tc.iter(qn("w:shd")):
+                fill = (shd.get(qn("w:fill")) or "auto").upper()
+                if fill not in ("AUTO", "FFFFFF", "NONE"):
+                    warna.add(fill)
+        if warna:
+            sel = t.rows[0].cells[0].text.strip()[:25] if t.rows else ""
+            temuan.append(f"gaya: tabel berwarna (tabel ke-{i}, sel pertama '{sel}', warna {', '.join(sorted(warna))}); hapus shading, header cukup tebal hitam")
     return temuan
 
 
@@ -138,6 +155,7 @@ def lint(path, bab=None):
                 temuan.append(f"gaya ({nama}): {potong(teks, m)}")
 
     temuan += lint_isi(doc)
+    temuan += lint_warna(doc)
     return temuan
 
 
