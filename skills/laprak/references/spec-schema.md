@@ -21,7 +21,7 @@ dengan struktur serupa.
 ## Bagian
 
 Tiap bagian menghasilkan satu heading, lalu isinya dalam urutan tetap:
-`pengantar` → `isi` → `daftar` → `penutup` → `sub`.
+`pengantar` → `isi` → `daftar` → `pustaka` → `penutup` → `sub`.
 
 ```jsonc
 {
@@ -29,6 +29,7 @@ Tiap bagian menghasilkan satu heading, lalu isinya dalam urutan tetap:
   "pengantar": ["paragraf pembuka"],
   "isi": [ /* blok */ ],
   "daftar": [ /* string atau blok, dinomori 1, 2, 3 */ ],
+  "pustaka": ["Penulis, A. (2020). *Judul Buku*. Penerbit."],  // APA, diurutkan abjad, indent menggantung 1,25 cm
   "penutup": [ /* blok */ ],
   "sub": [ /* bagian bersarang, otomatis turun satu tingkat heading */ ]
 }
@@ -40,12 +41,16 @@ Kedalaman heading maksimal tiga tingkat: `5.1` → `5.1.1` → `5.1.1.1`.
 ## Blok
 
 Satu blok boleh menggabungkan beberapa kunci. Urutan render selalu:
-`teks` → `paragraf` → `kode` → `tabel` → `gambar` → `paragraf_akhir`.
+`teks` → `paragraf` → `persamaan` → `kode` → `tabel` → `gambar` → `paragraf_akhir`.
 
 ```jsonc
 {
   "teks": "Satu kalimat langkah.",          // jadi butir bernomor di dalam "daftar"
   "paragraf": ["paragraf biasa"],
+  "persamaan": {                            // baris sendiri, rata tengah, nomor (bab.n) di kanan
+    "rumus": "Galat = |Vu - Vt| / Vt x 100%",
+    "keterangan": ["dengan Vu nilai ukur dan Vt nilai teori."]   // opsional, tanpa indent
+  },
   "kode": ["Router>enable", "Router#configure terminal"],
   "tabel": {
     "caption": "Data Hasil Pengukuran",
@@ -58,8 +63,15 @@ Satu blok boleh menggabungkan beberapa kunci. Urutan render selalu:
 }
 ```
 
-`gambar` boleh berupa string, satu objek, atau daftar objek. `tabel` boleh satu objek
-atau daftar objek.
+`gambar` boleh berupa string, satu objek, atau daftar objek. `tabel` dan `persamaan` boleh
+satu objek atau daftar objek. `persamaan` juga boleh berupa string rumus saja.
+
+Gambar yang berkasnya belum ada tidak menghentikan build: skrip memasang kotak
+`[ISI: gambar nama.png]` dengan caption tetap ada, lalu mencetak `PERINGATAN`.
+Pakai `--ketat` bila ingin build berhenti.
+
+Nomor persamaan dihitung skrip (bab.1, bab.2, ...) dan tidak butuh pembaruan field.
+Rujuk di prosa sebagai "Persamaan (5.1)".
 
 ## Contoh ringkas: jaringan (profil `srwe`)
 
@@ -104,7 +116,13 @@ atau daftar objek.
 ## Catatan
 
 - `*miring*` memaksa cetak miring. Sisanya dimiringkan otomatis bila cocok daftar `istilah`.
+  Ini hanya berlaku di prosa (paragraf, daftar, pustaka). Heading, caption, sel tabel, dan kode
+  tidak pernah miring; tanda `*` di sana dibuang. Nama merek tidak perlu ditandai, karena tidak
+  ada di daftar `istilah`; bila ada yang terlanjur cocok, keluarkan lewat `"istilah_kecuali"`.
 - Tiap `daftar` memperoleh penomoran sendiri yang mulai dari 1.
-- Rujukan silang ditulis manual, misal "seperti pada Gambar 5.4". Cocokkan nomornya
-  setelah `Fields.Update()` di Word.
+- Rujukan silang ditulis manual, misal "seperti pada Gambar 5.4". Setelah build,
+  `lint_laprak.py` berjalan otomatis dan mencetak `PERINGATAN` untuk rujukan yang nomornya
+  tidak ada, gambar atau tabel yang tidak dirujuk, penanda `[ISI: ...]` atau
+  `[CEK SUMBER: ...]` yang tersisa, dan pola gaya (em dash, "di mana", "dilakukan", "kami",
+  "membuktikan"). Temuan ditimbang satu per satu, bukan diganti otomatis.
 - Modul tanpa kode tinggal tidak memakai kunci `kode`. Tidak ada yang perlu dimatikan.

@@ -18,7 +18,7 @@
        "daftar": [
          {"teks": "Susun topologi seperti pada Gambar 5.1.",
           "gambar": {"file": "gambar/01-topologi.png", "caption": "Topologi Percobaan 1"}},
-         {"teks": "Aktifkan layanan DHCP pada router.",
+         {"teks": "Aktifkan layanan DHCP pada router sesuai alamat pada Tabel 5.1.",
           "kode": ["Router>enable", "Router#configure terminal", "Router(config)#ip dhcp pool LAN"]}
        ]}
     ]},

@@ -6,13 +6,14 @@ Skema spec: references/spec-schema.md
 Profil format: assets/profil.json
 """
 import argparse
+import copy
 import json
 import os
 import re
 import sys
 
 from docx import Document
-from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -22,6 +23,8 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, os.pardir, "assets")
 TNR = "Times New Roman"
+TEKS = Pt(12)
+KECIL = Pt(10)
 
 ISTILAH = [
     "access point", "default gateway", "gateway", "interface", "port",
@@ -33,6 +36,8 @@ ISTILAH = [
     "forward bias", "reverse bias", "bias", "output", "input", "probe",
     "screenshot", "sheet", "datasheet", "power supply", "ground",
     "clock", "flip-flop", "truth table", "timer", "counter", "gate",
+    "port security", "port-security", "native vlan", "native", "sticky",
+    "dhcp snooping", "snooping", "trunk", "access port", "violation",
 ]
 
 
@@ -83,6 +88,12 @@ def new_num(doc, levels, left=720, hanging=720):
         pPr = el("w:pPr")
         pPr.append(el("w:ind", left=left + 720 * i, hanging=hanging if i == 0 else 360))
         lvl.append(pPr)
+        # nomor selalu Times New Roman 12, tidak ikut font style heading template
+        rPr = el("w:rPr")
+        rPr.append(el("w:rFonts", ascii=TNR, hAnsi=TNR, cs=TNR, eastAsia=TNR))
+        rPr.append(el("w:sz", val=24))
+        rPr.append(el("w:szCs", val=24))
+        lvl.append(rPr)
         a.append(lvl)
     numb.findall(qn("w:abstractNum"))[-1].addnext(a)
 
@@ -138,12 +149,13 @@ def auto_italic(text, istilah):
     return out or [(text, False)]
 
 
-def add_runs(p, text, istilah, size=None, bold=False, color=None, font=TNR, no_italic=False):
+def add_runs(p, text, istilah, size=TEKS, bold=False, color=None, font=TNR, miring=True):
+    """Tulis teks sebagai run. miring=False: tidak ada yang miring (heading, caption, tabel)."""
     for chunk, ital in split_italic(text, istilah):
         r = p.add_run(chunk)
         r.font.name = font
         r._element.rPr.rFonts.set(qn("w:eastAsia"), font)
-        r.italic = (ital or False) if no_italic else (ital or None)
+        r.italic = bool(ital) if miring else False
         if bold:
             r.bold = True
         if size:
@@ -153,11 +165,50 @@ def add_runs(p, text, istilah, size=None, bold=False, color=None, font=TNR, no_i
     return p
 
 
+def rapat(p, line):
+    """Spasi before dan after 0, spasi baris sesuai argumen."""
+    pf = p.paragraph_format
+    pf.space_before = Pt(0)
+    pf.space_after = Pt(0)
+    pf.line_spacing = line
+
+
+def mark_rpr(p, size_half_pt, bold=False, color="000000"):
+    """Format tanda paragraf: dipakai Word untuk nomor daftar dan heading."""
+    pPr = p._p.get_or_add_pPr()
+    old = pPr.find(qn("w:rPr"))
+    if old is not None:
+        pPr.remove(old)
+    rPr = el("w:rPr")
+    rPr.append(el("w:rFonts", ascii=TNR, hAnsi=TNR, cs=TNR, eastAsia=TNR))
+    if bold:
+        rPr.append(el("w:b"))
+    rPr.append(el("w:i", val="0"))
+    rPr.append(el("w:color", val=color))
+    rPr.append(el("w:sz", val=size_half_pt))
+    rPr.append(el("w:szCs", val=size_half_pt))
+    pPr.append(rPr)
+
+
+def pastikan_table_grid(doc):
+    """Template tanpa style Table Grid (eldas) mendapat salinan dari template srwe."""
+    if any(s.style_id == "TableGrid" for s in doc.styles):
+        return
+    src = Document(os.path.join(ASSETS, "srwe.docx"))
+    for s in src.styles.element.findall(qn("w:style")):
+        if s.get(qn("w:styleId")) == "TableGrid":
+            doc.styles.element.append(copy.deepcopy(s))
+            return
+
+
 # ---------- pembangun ----------
 
 class Builder:
-    def __init__(self, spec):
+    def __init__(self, spec, ketat=False):
         self.spec = spec
+        self.ketat = ketat
+        self.peringatan = []
+        self.n_persamaan = 0
         self.bab = int(spec["bab"])
         self.istilah = [t for t in spec.get("istilah", ISTILAH)
                         if t not in spec.get("istilah_kecuali", [])]
@@ -169,6 +220,7 @@ class Builder:
         self.P = profiles[name]
         self.P.update(spec.get("profil_override", {}))
         self.doc = Document(os.path.join(ASSETS, self.P["template"]))
+        pastikan_table_grid(self.doc)
         patch_numbering(self.doc, self.bab)
         self.pending_break = False
         self.hnum = new_num(
@@ -187,14 +239,11 @@ class Builder:
     def heading(self, text, level):
         """level 0 = x.1, level 1 = x.1.1, level 2 = x.1.1.1"""
         p = self.doc.add_paragraph(style=self.P["heading"][level])
-        add_runs(p, text, self.istilah, bold=True, color="000000", no_italic=True)
+        add_runs(p, text, self.istilah, bold=True, color="000000", miring=False)
         set_num(p, self.hnum, level)
         set_ind(p, **self.P["heading_ind"])
-        mark = el("w:rPr")
-        mark.append(el("w:b"))
-        mark.append(el("w:i", val="0"))
-        mark.append(el("w:color", val="000000"))
-        p._p.pPr.append(mark)
+        rapat(p, self.P["paragraf"]["line"])
+        mark_rpr(p, 24, bold=True)
         if self.pending_break:
             p.paragraph_format.page_break_before = True
             self.pending_break = False
@@ -203,12 +252,10 @@ class Builder:
     def para(self, text, first_line=None):
         cfg = self.P["paragraf"]
         p = self.doc.add_paragraph()
-        pf = p.paragraph_format
-        pf.space_after = Pt(cfg["after"])
-        pf.line_spacing = cfg["line"]
+        rapat(p, cfg["line"])
         p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         fl = cfg["first_line"] if first_line is None else first_line
-        if fl:
+        if fl or first_line == 0:
             set_ind(p, left=0, firstLine=fl)
         add_runs(p, text, self.istilah)
         return p
@@ -217,43 +264,62 @@ class Builder:
         cfg = self.P["daftar"]
         p = self.doc.add_paragraph(style="List Paragraph")
         set_num(p, num_id)
-        pf = p.paragraph_format
-        pf.space_after = Pt(0)
-        pf.line_spacing = self.P["paragraf"]["line"]
+        rapat(p, self.P["paragraf"]["line"])
         p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         set_ind(p, **cfg)
+        mark_rpr(p, 24)
         add_runs(p, text, self.istilah)
+        return p
+
+    def jeda(self):
+        """Paragraf kosong pemisah setelah tabel, tanpa before/after."""
+        p = self.doc.add_paragraph()
+        rapat(p, self.P["paragraf"]["line"])
+        set_ind(p, left=0, firstLine=0)
         return p
 
     def caption(self, kind, text):
         gambar = kind == "Gambar"
         style = self.P["caption_gambar_style"] if gambar else self.P["caption_tabel_style"]
         p = self.doc.add_paragraph(style=style)
-        rata = self.P.get("caption_gambar_rata" if gambar else "caption_tabel_rata", "tengah")
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER if rata == "tengah" else WD_ALIGN_PARAGRAPH.LEFT
-        if rata != "tengah":
+        if gambar:
+            # di bawah gambar: rata tengah, spasi 1,5
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            rapat(p, 1.5)
             set_ind(p, left=0, firstLine=0)
-        p.paragraph_format.keep_with_next = True
-        r = p.add_run(f"{kind} {self.bab}. ")
-        r.font.name = TNR
+        else:
+            # di atas tabel: spasi 1, indent menggantung seperti daftar
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            rapat(p, 1.0)
+            set_ind(p, **self.P["caption_tabel_ind"])
+            p.paragraph_format.keep_with_next = True
+        mark_rpr(p, 20)
+        add_runs(p, f"{kind} {self.bab}.", [], size=KECIL, color="000000", miring=False)
+        # sama dengan hasil Word InsertCaption berlabel "Gambar N.": SEQ Gambar_N.
         sfx = self.P["seq_suffix"]
         fld = el("w:fldSimple", instr=f" SEQ {kind}_{self.bab}.{sfx} \\* ARABIC ")
         inner = OxmlElement("w:r")
-        rPr = OxmlElement("w:rPr")
-        rPr.append(OxmlElement("w:noProof"))
+        rPr = el("w:rPr")
+        rPr.append(el("w:rFonts", ascii=TNR, hAnsi=TNR, cs=TNR, eastAsia=TNR))
+        rPr.append(el("w:i", val="0"))
+        rPr.append(el("w:noProof"))
+        rPr.append(el("w:color", val="000000"))
+        rPr.append(el("w:sz", val=20))
         inner.append(rPr)
         t = OxmlElement("w:t")
         t.text = "1"
         inner.append(t)
         fld.append(inner)
         p._p.append(fld)
-        add_runs(p, " " + text, self.istilah)
+        add_runs(p, " " + text, [], size=KECIL, color="000000", miring=False)
         return p
 
     def figure(self, path, cap):
         path = self.img_path(path)
         if not os.path.exists(path):
-            sys.exit(f"gambar tidak ada: {path}")
+            if self.ketat:
+                sys.exit(f"gambar tidak ada: {path}")
+            return self.figure_kosong(path, cap)
         g = self.P["gambar"]
         with Image.open(path) as im:
             w_px, h_px = im.size
@@ -262,13 +328,35 @@ class Builder:
         if h > int(Cm(g["max_h"])):
             w = int(w * int(Cm(g["max_h"])) / h)
         p = self.doc.add_paragraph(style=g["style"])
-        pf = p.paragraph_format
-        pf.keep_with_next = True
-        pf.space_after = Pt(0)
-        pf.line_spacing = 1.0
+        rapat(p, 1.0)
+        p.paragraph_format.keep_with_next = True
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         set_ind(p, left=0, firstLine=0)
         p.add_run().add_picture(path, width=w)
+        if cap:
+            self.caption("Gambar", cap)
+        return p
+
+    def figure_kosong(self, path, cap):
+        """Gambar belum ada: kotak penanda [ISI: ...] supaya build tetap jalan."""
+        self.peringatan.append(f"gambar tidak ada, diganti penanda: {path}")
+        t = self.doc.add_table(rows=1, cols=1)
+        t.alignment = WD_TABLE_ALIGNMENT.CENTER
+        b = el("w:tblBorders")
+        for side in ("top", "left", "bottom", "right"):
+            b.append(el("w:" + side, val="dashed", sz=8, space=0, color="808080"))
+        t._tbl.tblPr.append(b)
+        cell = t.cell(0, 0)
+        cell.width = Cm(self.P["gambar"]["max_w"] * 0.6)
+        cell._tc.get_or_add_tcPr().append(el("w:vAlign", val="center"))
+        t.rows[0].height = Cm(3)
+        t.rows[0].height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
+        p = cell.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        rapat(p, 1.0)
+        p.paragraph_format.keep_with_next = True
+        set_ind(p, left=0, firstLine=0)
+        add_runs(p, f"[ISI: gambar {os.path.basename(path)}]", [], color="808080")
         if cap:
             self.caption("Gambar", cap)
         return p
@@ -284,13 +372,52 @@ class Builder:
             r._element.getparent().remove(r._element)
         for i, line in enumerate(lines):
             p = cell.paragraphs[0] if i == 0 else cell.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            rapat(p, 1.0)
+            set_ind(p, left=0, firstLine=0)
             r = p.add_run(line)
             r.font.name = c["font"]
             r._element.rPr.rFonts.set(qn("w:eastAsia"), c["font"])
             r.font.size = Pt(c["size"])
-        self.doc.add_paragraph()
+            r.italic = False
+        self.jeda()
         return t
+
+    def lebar_teks(self):
+        s = self.doc.sections[-1]
+        return int(s.page_width - s.left_margin - s.right_margin)
+
+    def equation(self, eq):
+        """Persamaan di baris sendiri, rata tengah, nomor (bab.n) di kanan."""
+        if isinstance(eq, str):
+            eq = {"rumus": eq}
+        self.n_persamaan += 1
+        lebar = self.lebar_teks()
+        p = self.doc.add_paragraph()
+        rapat(p, self.P["paragraf"]["line"])
+        p.paragraph_format.keep_together = True
+        set_ind(p, left=0, firstLine=0)
+        tabs = el("w:tabs")
+        tabs.append(el("w:tab", val="center", pos=lebar // 635 // 2))
+        tabs.append(el("w:tab", val="right", pos=lebar // 635))
+        p._p.get_or_add_pPr().append(tabs)
+        p.add_run("\t")
+        add_runs(p, eq["rumus"], [])
+        add_runs(p, f"\t({self.bab}.{self.n_persamaan})", [], miring=False)
+        for par in eq.get("keterangan", []):
+            self.para(par, first_line=0)
+        return p
+
+    def references(self, items):
+        """Daftar pustaka: urut abjad, indent menggantung 36 pt."""
+        def kunci(s):
+            return re.sub(r"[*\W_]+", "", s).lower()
+        for item in sorted(items, key=kunci):
+            p = self.doc.add_paragraph()
+            rapat(p, self.P["paragraf"]["line"])
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            set_ind(p, **self.P["daftar"])
+            add_runs(p, item, [])
 
     def table(self, spec):
         cfg = self.P["tabel"]
@@ -312,14 +439,15 @@ class Builder:
             if cfg.get("header_fill"):
                 cell._tc.get_or_add_tcPr().append(
                     el("w:shd", val="clear", color="auto", fill=cfg["header_fill"]))
-            self.fill(cell, str(text), bold=True, color=cfg.get("header_color"))
+            # tanpa warna: header cukup tebal hitam di latar putih (warna terbaca AI slop)
+            self.fill(cell, str(text), bold=True, color=cfg.get("header_color") or "000000")
         for i, row in enumerate(rows, start=1):
             for j, text in enumerate(row):
-                self.fill(t.rows[i].cells[j], str(text))
+                self.fill(t.rows[i].cells[j], str(text), color="000000")
         for j, w in enumerate(spec.get("widths") or []):
             for row in t.rows:
                 row.cells[j].width = Cm(w)
-        self.doc.add_paragraph()
+        self.jeda()
         return t
 
     def borders(self, t):
@@ -334,9 +462,9 @@ class Builder:
         cell._tc.get_or_add_tcPr().append(el("w:vAlign", val="center"))
         p = cell.paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_before = Pt(2)
-        p.paragraph_format.space_after = Pt(2)
-        add_runs(p, text, self.istilah, bold=bold, color=color)
+        rapat(p, self.P["paragraf"]["line"])
+        set_ind(p, left=0, firstLine=0)
+        add_runs(p, text, [], bold=bold, color=color, miring=False)
 
     def brk(self):
         if self.P.get("break_antar_bagian"):
@@ -353,6 +481,8 @@ class Builder:
                 self.para(b["teks"])
         for par in b.get("paragraf", []):
             self.para(par)
+        for eq in listify(b.get("persamaan")):
+            self.equation(eq)
         if b.get("kode"):
             self.code(b["kode"])
         for tb in listify(b.get("tabel")):
@@ -379,6 +509,8 @@ class Builder:
                     self.item(it, nid)
                 else:
                     self.blok(it, nid)
+        if sec.get("pustaka"):
+            self.references(sec["pustaka"])
         for b in sec.get("penutup", []):
             self.blok(b)
         for sub in sec.get("sub", []):
@@ -391,8 +523,15 @@ class Builder:
             if i:
                 self.brk()
             self.bagian(sec, 0)
+        self.minta_update_field()
         self.doc.save(out)
         return out
+
+    def minta_update_field(self):
+        """Word menawarkan memperbarui field (nomor caption) saat dokumen dibuka."""
+        st = self.doc.settings.element
+        if st.find(qn("w:updateFields")) is None:
+            st.append(el("w:updateFields", val="true"))
 
     def judul(self):
         p = self.doc.add_paragraph(style=self.P["judul_style"])
@@ -406,9 +545,11 @@ class Builder:
         if self.P["judul_bab"]:
             set_num(p, 1, 0)
             baris = [""] + baris
+        mark_rpr(p, 24, bold=True)
         for i, line in enumerate(baris):
             r = p.add_run()
             r.font.name = TNR
+            r.font.size = TEKS
             r.bold = True
             if i:
                 r._element.append(OxmlElement("w:br"))
@@ -436,20 +577,34 @@ def gambar_list(entry):
     return g
 
 
-def build(spec, out):
-    return Builder(spec).build(out)
+def build(spec, out, ketat=False):
+    return Builder(spec, ketat=ketat).build(out)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("spec")
     ap.add_argument("-o", "--output")
+    ap.add_argument("--ketat", action="store_true",
+                    help="berhenti bila gambar tidak ada, alih-alih memasang penanda [ISI: ...]")
+    ap.add_argument("--tanpa-lint", action="store_true", help="lewati pemeriksaan setelah build")
     a = ap.parse_args()
-    with open(a.spec, encoding="utf-8") as f:
+    # utf-8-sig: spec yang ditulis PowerShell 5 / Notepad diawali BOM
+    with open(a.spec, encoding="utf-8-sig") as f:
         spec = json.load(f)
     spec.setdefault("base_dir", os.path.dirname(os.path.abspath(a.spec)))
     out = a.output or spec.get("output") or "Laporan.docx"
-    print(build(spec, out))
+    b = Builder(spec, ketat=a.ketat)
+    b.build(out)
+    temuan = list(b.peringatan)
+    if not a.tanpa_lint:
+        sys.path.insert(0, HERE)
+        from lint_laprak import lint
+        temuan += lint(out, b.bab)
+    for t in temuan:
+        print("PERINGATAN: " + t)
+    print(f"{len(temuan)} peringatan")
+    print(out)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ Laporan.docx
 laporan siap kumpul
 ```
 
-Agent hanya menyusun isi (`spec.json`). Format (font, margin, penomoran, warna tabel) datang dari template di `assets/`, jadi hasilnya konsisten antar modul.
+Agent hanya menyusun isi (`spec.json`). Format (font, margin, penomoran, gaya tabel) datang dari template di `assets/`, jadi hasilnya konsisten antar modul.
 
 ## 1. Siapkan bahan
 
@@ -40,10 +40,10 @@ Agent hanya menyusun isi (`spec.json`). Format (font, margin, penomoran, warna t
 
 | Profil | Pakai untuk | Beda utama |
 |---|---|---|
-| `srwe` | praktikum jaringan komputer (router, switch, wireless) | judul "BAB V" dua baris, header tabel pink `FF89FF`, gambar maks 11,67 cm |
-| `eldas` | praktikum elektronika dasar dan sistem digital | judul tanpa "BAB", header tabel biru muda `E8EEF5`, gambar maks 14 cm, heading sampai 4 tingkat |
+| `srwe` | praktikum jaringan komputer (router, switch, wireless) | judul "BAB V" dua baris, gambar maks 11,67 cm |
+| `eldas` | praktikum elektronika dasar dan sistem digital | judul tanpa "BAB", gambar maks 14 cm, heading sampai 4 tingkat |
 
-   Ragu? Lihat laporan contoh dari asisten atau dosen. Kalau ada kata "BAB" di judul dan tabel berwarna pink, itu `srwe`.
+   Ragu? Lihat laporan contoh dari asisten atau dosen. Kalau ada kata "BAB" di judul, itu `srwe`.
 
 ## 2. Minta ke agent
 
@@ -160,7 +160,7 @@ Kunci yang sering disesuaikan:
 | Kunci | Arti |
 |---|---|
 | `gambar.max_w`, `gambar.max_h` | batas lebar dan tinggi gambar (cm) |
-| `tabel.header_fill` | warna latar header tabel (hex) |
+| `tabel.header_fill` | warna latar header tabel (hex). Bawaan `null` (tanpa warna); isi hanya bila dosen meminta |
 | `tabel.header_color` | warna teks header (hex, `null` = default) |
 | `paragraf.first_line` | indentasi baris pertama (twips, 709 = 1,25 cm) |
 | `paragraf.line` | spasi baris (1.5 = satu setengah) |

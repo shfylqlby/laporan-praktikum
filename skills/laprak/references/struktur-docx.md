@@ -1,4 +1,15 @@
-# Struktur template (hasil pembedahan `Format Laporan Prak SRWE Modul 4.docx`)
+# Struktur template
+
+> **Catatan format umum.** Angka di bawah adalah hasil pembedahan dokumen acuan. Generator kini
+> menimpa sebagian di semua profil sesuai Format umum di `SKILL.md`: TNR 12 eksplisit (termasuk
+> nomor heading), before/after 0 di semua paragraf, indent 720 twip (36 pt) untuk paragraf,
+> heading, daftar, dan caption tabel, caption gambar spasi 1,5, caption tabel spasi 1,
+> tabel data `Table Grid` selebar teks (7938 dxa) tanpa warna (header tebal hitam, tanpa shading)
+> dengan isi spasi 1,5, dan label SEQ
+> `Gambar_N.` di kedua profil (sama dengan Word InsertCaption). Template eldas tidak punya
+> style `Table Grid`; generator menyalinnya dari srwe saat build. Berkas di `assets/` tidak diubah.
+
+## SRWE (hasil pembedahan `Format Laporan Prak SRWE Modul 4.docx`)
 
 Dokumen acuan: 185 paragraf, 6 tabel, 46 gambar, 27 halaman.
 

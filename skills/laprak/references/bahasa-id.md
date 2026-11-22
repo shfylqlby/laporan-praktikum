@@ -9,7 +9,7 @@ Kekakuan teks Indonesia jarang berasal dari salah tata bahasa. Penyebabnya kepad
 ## Larangan keras
 
 - Tanpa em dash (—) dan en dash (–) di badan prosa. Pakai koma, titik dua, kurung, atau pecah jadi dua kalimat.
-- Tanpa bullet di badan laporan. Hanya Tujuan dan Kesimpulan yang berupa daftar bernomor.
+- Tanpa bullet di badan laporan. Yang berupa daftar bernomor hanya Tujuan, langkah percobaan, dan Kesimpulan.
 - Tanpa klaim derajat kepastian yang dibuat-buat: "hal ini membuktikan bahwa", "dapat disimpulkan secara pasti". Laporan praktikum melaporkan pengamatan, bukan membuktikan teori.
 
 ## Tell yang harus dihindari
